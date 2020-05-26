@@ -1,0 +1,36 @@
+{
+  "name": "await-release",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "await-release": "cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mogelbrod/await-release.git"
+  },
+  "keywords": [
+    "await",
+    "npm",
+    "package",
+    "release",
+    "version",
+    "cli"
+  ],
+  "author": "Victor Hallberg <victor@hallberg.cc>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mogelbrod/await-release/issues"
+  },
+  "homepage": "https://github.com/mogelbrod/await-release#readme",
+  "dependencies": {
+    "commander": "^5.1.0",
+    "libnpmconfig": "^1.2.1",
+    "npm-registry-fetch": "^8.1.0",
+    "semver": "^7.3.2"
+  }
+}
