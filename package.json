@@ -31,6 +31,7 @@
     "commander": "^5.1.0",
     "libnpmconfig": "^1.2.1",
     "npm-registry-fetch": "^8.1.0",
-    "semver": "^7.3.2"
+    "semver": "^7.3.2",
+    "string-argv": "^0.3.1"
   }
 }

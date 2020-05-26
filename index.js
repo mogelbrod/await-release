@@ -5,6 +5,8 @@ const semver = require('semver')
 const { read: getNpmConfig } = require('libnpmconfig')
 
 const SECOND = 1e3
+// Capturing groups: @scope/package-name, @scope, package-name, @semverString
+const PACKAGE_SPEC_REGEX = /^((?:(@[a-z0-9-~][a-z0-9-._~]*)\/)?([a-z0-9-~][a-z0-9-._~]*))(?:@([^@]+))?$/
 const ANY_VERSION = '>=0'
 const DEFAULTS = {
   version: ANY_VERSION,
@@ -26,9 +28,9 @@ function awaitRelease(packageString, {
   if (!Number.isFinite(timeout)) { timeout = DEFAULTS.timeout }
   if (!Number.isFinite(delay)) { delay = DEFAULTS.delay }
 
-  const releasedAfter = new Date(Date.now() - grace * SECOND)
+  const releasedAfter = new Date(Math.max(0, Date.now() - grace * SECOND))
 
-  const packageParts = packageString.match(/^((@[^/@]+)?([^@]+))(?:@([^@]+))?$/)
+  const packageParts = packageString.match(PACKAGE_SPEC_REGEX)
   if (!packageParts) {
     return Promise.reject(new ReleaseMatchError(
       `Invalid package string: '${packageString}'`,
@@ -113,17 +115,18 @@ function lookupLatestMatchingRelease(packageName, {
 
     if (matching) {
       // Return a shallow cloned object excluding underscore prefixed keys
-      const versionObject = Object.assign({
+      const release = Object.assign({
         name: packageName,
         version: matching[0],
       }, data.versions[matching[0]])
-      for (let key in versionObject) {
-        if (Object.prototype.hasOwnProperty.call(versionObject, key) && key[0] === '_') {
-          delete versionObject[key]
+      for (let key in release) {
+        if (Object.prototype.hasOwnProperty.call(release, key) && key[0] === '_') {
+          delete release[key]
         }
       }
-      versionObject.time = new Date(matching[1])
-      return versionObject
+      release.time = new Date(matching[1])
+      release.spec = [release.name, release.version].join('@')
+      return release
     } else {
       throw new ReleaseMatchError('No matching releases found', metadata)
     }
@@ -141,7 +144,8 @@ class ReleaseMatchError extends Error {
 
 module.exports = {
   awaitRelease,
+  ReleaseMatchError,
   DEFAULTS,
   ANY_VERSION,
-  ReleaseMatchError,
+  PACKAGE_SPEC_REGEX,
 }
