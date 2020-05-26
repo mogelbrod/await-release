@@ -18,10 +18,20 @@ const packages = []
 
 program
   .version(packageJson.version)
+  .description(
+    'Poll the NPM registry until the requested package(s) has a new release.\n\n' +
+    'Package identifiers may optionally include:\n' +
+    '  * scope (@org/pkg)\n' +
+    '  * semver version string (pkg@16, pkg@1.x, etc.)'
+  )
+  .arguments('<package> [package2@version...]')
+  .action((pkg, additionalPackages) => {
+    packages.push(pkg, ...additionalPackages)
+  })
   .option('-o, --output <format>',
     `output format (${OUTPUT_STYLES.join('/')})`)
   .option('-g, --grace <seconds>',
-    'accept versions released up to X seconds earlier',
+    'accept versions released up to X seconds before invocation',
     decimal, DEFAULTS.grace)
   .option('-t, --timeout <seconds>',
     'exit if no release matches after X seconds',
@@ -29,19 +39,20 @@ program
   .option('-d, --delay <seconds>',
     'time between polling requests',
     decimal, DEFAULTS.delay)
-  .arguments('<package> [package2@version...]')
-  .action((pkg, additionalPackages) => {
-    packages.push(pkg, ...additionalPackages)
-  })
-  .parse(process.argv)
+
+if (process.argv.length < 3) {
+  return program.help()
+}
+
+program.parse(process.argv)
+
+if (!packages.length) {
+  return program.help()
+}
 
 const args = program.opts()
 if (args.output === 'verbose') {
   args.logger = (message) => console.log(message)
-}
-
-if (!packages.length) {
-  return program.help()
 }
 
 const promises = packages.map(p => awaitRelease(p, args))
