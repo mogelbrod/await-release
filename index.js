@@ -56,7 +56,7 @@ function awaitRelease(packageString, {
     new Promise((resolve, reject) => {
       if (timeout > 0) {
         setTimeout(() => {
-          reject(new ReleaseMatchError(`Timeout after ${timeout}s`), params)
+          reject(new ReleaseMatchError(`Timeout after ${timeout}s`, params))
         }, timeout * SECOND)
       }
     })
