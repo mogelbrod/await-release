@@ -7,7 +7,7 @@ subsequent commands to run.
 ## Features
 
 - [x] Supports private NPM registries (if `npm` can access it, so should this package)
-- [x] `--exec 'npm update %s'` to inject and run commands on release
+- [x] `--exec 'npm install %s'` to inject and run commands on release
 - [ ] `--install` flag to automatically run `npm install $package` on release
 - [ ] `--update` flag to automatically run `npm update $package` on release
 - [ ] `--daemon` to keep listening for new releases (works with `--exec`)
@@ -54,7 +54,7 @@ after interpolation of the following placeholders:
 #### Install new version of a dependency when it becomes available
 
 ```sh
-await-release my-dependency --exec 'npm update %s'
+await-release my-dependency --exec 'npm install %s'
 ```
 
 #### Notify when a new package version is released
