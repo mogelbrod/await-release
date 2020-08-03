@@ -74,6 +74,7 @@ function pollUntilMatchingRelease(packageName, options = {}, retries = 0) {
     if (!(error instanceof ReleaseMatchError)) {
       throw error
     }
+    options.logger && options.logger(error.message)
     return new Promise(resolve => {
       setTimeout(
         () => resolve(pollUntilMatchingRelease(packageName, options, retries + 1)),
@@ -106,12 +107,11 @@ function lookupLatestMatchingRelease(packageName, {
       throw new ReleaseMatchError('No releases found', metadata)
     }
 
-    const matching = Object.entries(data.time)
+    const sorted = Object.entries(data.time)
       .sort((a, b) => b[1].localeCompare(a[1]))
-      .find(([version, time]) => {
-        return semver.satisfies(version, targetVersion) &&
-          new Date(time) >= releasedAfter
-      })
+      .filter(([version]) => semver.satisfies(version, targetVersion))
+
+    const matching = sorted.find(([, time]) => new Date(time) >= releasedAfter)
 
     if (matching) {
       // Return a shallow cloned object excluding underscore prefixed keys
@@ -128,7 +128,15 @@ function lookupLatestMatchingRelease(packageName, {
       release.spec = [release.name, release.version].join('@')
       return release
     } else {
-      throw new ReleaseMatchError('No matching releases found', metadata)
+      let msg = 'No matching releases found'
+      if (sorted.length) {
+        metadata.latest = {
+          version: sorted[0][0],
+          time: new Date(sorted[0][1]),
+        }
+        msg = `Latest release (${metadata.latest.version}) is too old`
+      }
+      throw new ReleaseMatchError(msg, metadata)
     }
   })
 }
