@@ -31,6 +31,8 @@ program
   .action((pkg, additionalPackages) => {
     packages.push(pkg, ...additionalPackages)
   })
+  .option('-i, --install',
+    `execute 'npm install' on release`)
   .option('-e, --exec <command>',
     `execute shell command on release (interpolates %p, %s, %t, %v)`)
   .option('-o, --output <format>',
@@ -89,38 +91,14 @@ const awaitReleasePromises = packages.map(pkg => {
         break
     }
 
-    if (!args.exec) {
-      return release
+    let result = Promise.resolve(release)
+    if (args.install) {
+      result = result.then(() => exec('npm install %s', release))
     }
-
-    const replacements = {
-      p: release.name,
-      s: release.spec,
-      t: release.time.toJSON(),
-      v: release.version,
+    if (args.exec) {
+      result = result.then(() => exec(args.exec, release))
     }
-    const cmdString = args.exec.replace(/%[%pstv]/g, (m) => (replacements[m[1]] || '%'))
-    const cmdArgs = parseArgsStringToArgv(cmdString)
-    const cmd = cmdArgs.shift()
-
-    if (args.output === 'verbose') {
-      console.log('exec:', cmd, ...cmdArgs)
-    }
-    return new Promise((resolve, reject) => {
-      const proc = spawn(cmd, cmdArgs, { shell: true })
-      proc.stdout.pipe(process.stdout)
-      proc.stderr.pipe(process.stderr)
-      proc.on('error', (error) => {
-        reject(new Error(`Error while executing ${release.spec}: ${error.message}`))
-      })
-      proc.on('exit', (code, signal) => {
-        if (code > 0) {
-          reject(new Error(`Exit code ${code} (signal ${signal}) while executing ${release.spec}`))
-        } else {
-          resolve(release)
-        }
-      })
-    })
+    return result
   })
 })
 
@@ -140,3 +118,38 @@ Promise.all(awaitReleasePromises).then(packages => {
   console.error(error.stack)
   return process.exit(4)
 })
+
+function exec(cmdTemplate, release) {
+  const interpolations = {
+    p: release.name,
+    s: release.spec,
+    t: release.time.toJSON(),
+    v: release.version,
+  }
+  const cmdString = cmdTemplate.replace(/%[%pstv]/g, (m) => (interpolations[m[1]] || '%'))
+  const cmdArgs = parseArgsStringToArgv(cmdString)
+  const cmd = cmdArgs.shift()
+
+  if (args.output === 'verbose') {
+    console.log('exec:', cmd, ...cmdArgs)
+  }
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn(cmd, cmdArgs, { shell: true })
+    proc.stdout.pipe(process.stdout)
+    proc.stderr.pipe(process.stderr)
+    proc.on('error', (error) => {
+      reject(new Error(`Error while executing ${release.spec}: ${error.message}`))
+    })
+    proc.on('exit', (code, signal) => {
+      if (code > 0) {
+        reject(new Error(`Exit code ${code} (signal ${signal}) while executing ${release.spec}`))
+      } else {
+        if (args.output === 'verbose') {
+          console.log('exec completed:', cmd, ...cmdArgs)
+        }
+        resolve(release)
+      }
+    })
+  })
+}
