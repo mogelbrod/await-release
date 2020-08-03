@@ -152,6 +152,8 @@ class ReleaseMatchError extends Error {
 
 module.exports = {
   awaitRelease,
+  pollUntilMatchingRelease,
+  lookupLatestMatchingRelease,
   ReleaseMatchError,
   DEFAULTS,
   ANY_VERSION,
