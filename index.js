@@ -87,7 +87,7 @@ function pollUntilMatchingRelease(packageName, options = {}, retries = 0) {
 function lookupLatestMatchingRelease(packageName, {
   targetVersion = ANY_VERSION,
   releasedAfter = new Date(),
-  npmConfig = {},
+  npmConfig = DEFAULTS.npmConfig,
 }) {
   const metadata = { packageName, targetVersion, releasedAfter }
   const scopeParts = packageName.match(/^@[^/@]+/)
