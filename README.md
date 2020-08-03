@@ -8,7 +8,7 @@ subsequent commands to run.
 
 - [x] Supports private NPM registries (if `npm` can access it, so should this package)
 - [x] `--exec 'npm install %s'` to inject and run commands on release
-- [ ] `--install` flag to automatically run `npm install $package` on release
+- [x] `--install` flag to automatically run `npm install $package` on release
 - [ ] `--update` flag to automatically run `npm update $package` on release
 - [ ] `--daemon` to keep listening for new releases (works with `--exec`)
 
@@ -32,6 +32,7 @@ Package identifiers may optionally include:
 ### Options
 
 ```
+-i, --install            execute 'npm install' on release
 -e, --exec <command>     execute shell command on release (interpolates %p, %s, %t, %v)
 -o, --output <format>    output format (default/verbose/none/json)
 -g, --grace <seconds>    accept versions released up to X seconds before invocation (default: 10)
@@ -54,6 +55,8 @@ after interpolation of the following placeholders:
 #### Install new version of a dependency when it becomes available
 
 ```sh
+await-release my-dependency -i
+# or via --exec:
 await-release my-dependency --exec 'npm install %s'
 ```
 
